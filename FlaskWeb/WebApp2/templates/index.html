@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Signup Page</title>
+  <script src="/static/sp.js"></script>
+</head>
+<body>
+  <h2>Register for Our Service</h2>
+
+  <script>
+    window.snowplow('newTracker', 'sp', '{{ collector }}', {
+      appId: '{{ app_id }}',
+      platform: 'web',
+      cookieDomain: null
+    });
+
+    window.snowplow('trackPageView');
+
+    function trackSignup() {
+      window.snowplow('trackSelfDescribingEvent', {
+        schema: "iglu:com.example/signup_event/jsonschema/1-0-0",
+        data: {
+          formId: "signup-form",
+          formType: "basic",
+          userRole: document.getElementById('role').value
+        }
+      });
+    }
+  </script>
+
+  <form id="signup-form" onsubmit="trackSignup(); return false;">
+    <label>Username: <input type="text" required></label><br>
+    <label>Email: <input type="email" required></label><br>
+    <label>Role:
+      <select id="role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </label><br>
+    <button type="submit">Sign Up</button>
+  </form>
+</body>
+</html>

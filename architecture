@@ -1,0 +1,17 @@
+[Web App + JS Tracker]
+           ↓
+     [Snowplow Collector]
+           ↓
+         [Kafka]
+           ↓
+     [Snowplow Enrich]
+           ↓
+       [Kafka Topic]
+           ↓
+   [Spark Streaming Job]
+           ↓
+          [HDFS]
+           ↓
+  [Jupyter Notebook for Analysis]
+           ↓
+  [Hbase Database User Data]

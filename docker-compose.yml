@@ -1,0 +1,164 @@
+version: '3.9'
+
+networks:
+  flask_net:
+  snowplow_net:
+  hdfs_net:
+
+volumes:
+  hadoop_namenode:      # Persistent storage for Hadoop NameNode metadata
+  hadoop_datanode1:     # Persistent storage for Hadoop DataNode 1 data
+  hadoop_datanode2:     # Persistent storage for Hadoop DataNode 2 data
+  hadoop_datanode3:     # Persistent storage for Hadoop DataNode 3 data
+
+services:
+
+  # === FLASK APPS (Separate Network) ===
+  flask_app1:
+    build: ./flask_app1
+    ports:
+      - "5001:5000"
+    networks:
+      - flask_net
+    depends_on:
+      - collector
+
+  flask_app2:
+    build: ./flask_app2
+    ports:
+      - "5002:5000"
+    networks:
+      - flask_net
+    depends_on:
+      - collector
+
+  # === SNOWPLOW + STREAMING (Separate Network) ===
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.2.1
+    networks:
+      - snowplow_net
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      
+  # === KAFKA ===
+  kafka:
+    image: confluentinc/cp-kafka:7.2.1
+    networks:
+      - snowplow_net
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # === SNOWPLOW ===
+  collector:
+    image: snowplow/scala-stream-collector-kafka:2.6.0
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config/collector.conf:/snowplow/config/collector.conf
+    command: --config /snowplow/config/collector.conf
+    networks:
+      - snowplow_net
+    depends_on:
+      - kafka
+
+  enrich:
+    image: snowplow/stream-enrich-kafka:3.6.0
+    volumes:
+      - ./config/enrich.conf:/snowplow/config/enrich.conf
+    command: --config /snowplow/config/enrich.conf
+    networks:
+      - snowplow_net
+    depends_on:
+      - kafka
+
+  # === SPARK ===
+  spark1:
+    build: ./spark
+    networks:
+      - snowplow_net
+      - hdfs_net
+    depends_on:
+      - kafka
+      - namenode
+
+  spark2:
+    build: ./spark
+    networks:
+      - snowplow_net
+      - hdfs_net
+    depends_on:
+      - kafka
+      - namenode
+
+  spark3:
+    build: ./spark
+    networks:
+      - snowplow_net
+      - hdfs_net
+    depends_on:
+      - kafka
+      - namenode
+
+  # === HDFS ===
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    networks:
+      - hdfs_net
+    environment:
+      - CLUSTER_NAME=test
+    ports:
+      - "9870:9870"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    networks:
+      - hdfs_net
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hadoop_datanode1:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    networks:
+      - hdfs_net
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hadoop_datanode2:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    networks:
+      - hdfs_net
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hadoop_datanode3:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  # === JUPYTER NOTEBOOK ===
+  jupyter:
+    image: jupyter/pyspark-notebook:latest
+    ports:
+      - "8888:8888"
+    networks:
+      - hdfs_net
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    depends_on:
+      - spark1
