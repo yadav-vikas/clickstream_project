@@ -1,0 +1,40 @@
+services:
+  collector:
+    container_name: collector
+    image: snowplow/scala-stream-collector-kafka:2.6.0
+    command: ["--config", "/snowplow/collector/config.hocon"]
+    restart: always
+    ports:
+      - 9090:8080
+    # environment:
+    #   - ACCEPT_LICENSE=${ACCEPT_LICENSE}
+    volumes:
+      - ./snowplow/collector/config.hocon:/snowplow/collector/config.hocon
+    networks:
+      - snowplow_net
+    depends_on:
+      kafka:
+        condition: service_started
+
+  enrich:
+    container_name: enrich
+    image: snowplow/snowplow-enrich-kafka:3.8.0  # snowplow/stream-enrich-kafka:3.6.0
+    command: ["--config", "/snowplow/enrich/enrich.hocon", "--iglu-config", "/snowplow/iglu-client/iglu_resolver.json", "--enrichments", "/snowplow/enrich/enrichments"]
+    restart: always
+    # environment:
+    #   - ACCEPT_LICENSE=${ACCEPT_LICENSE}
+    volumes:
+      - ./snowplow/enrich/enrich.hocon:/snowplow/enrich/enrich.hocon
+      - ./snowplow/enrich/enrichments/:/snowplow/enrich/enrichments
+      - ./snowplow/iglu-client/iglu_resolver.json:/snowplow/iglu-client/iglu_resolver.json
+    networks:
+      - snowplow_net
+    depends_on:
+      collector:
+        condition: service_started
+      kafka:
+        condition: service_started
+
+networks:
+  snowplow_net:
+    # driver: bridge

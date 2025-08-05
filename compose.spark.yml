@@ -1,0 +1,79 @@
+services:
+
+  # === SPARK ===
+  spark-master:
+    image: bitnami/spark:3
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_WORKER_MEMORY=3g
+      - SPARK_WORKER_CORES=2
+    ports:
+      - "7077:7077"
+      - "8090:8080" #  (Spark UI)
+    networks:
+      - snowplow_net
+      - hdfs_net
+    volumes:
+      - ./spark/logs:/spark-logs  # Shared log directory for Spark
+    depends_on:
+      kafka:
+        condition: service_started
+      namenode:
+        condition: service_started
+
+  spark-worker-1:
+    image: bitnami/spark:3
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=3g
+      - SPARK_WORKER_CORES=2
+    networks:
+      - snowplow_net
+      - hdfs_net
+    volumes:
+      - ./spark/logs:/spark-logs  # Shared log directory for Spark
+    depends_on:
+      kafka:
+        condition: service_started
+      namenode:
+        condition: service_started
+
+  spark-worker-2:
+    image: bitnami/spark:3
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=3g
+      - SPARK_WORKER_CORES=2
+    networks:
+      - snowplow_net
+      - hdfs_net
+    volumes:
+      - ./spark/logs:/spark-logs  # Shared log directory for Spark
+    depends_on:
+      kafka:
+        condition: service_started
+      namenode:
+        condition: service_started
+
+  spark-streaming:
+    build: ./spark
+    container_name: spark-streaming
+    volumes:
+      - ./spark:/app
+      - ./spark/logs:/spark-logs  # Shared log directory for Spark
+    command: spark-submit --master spark://spark-master:7077 /app/spark_app.py
+    depends_on:
+      kafka:
+        condition: service_started
+      namenode:
+        condition: service_started
+      spark-master:
+        condition: service_started
+    networks:
+      - snowplow_net
+      - hdfs_net

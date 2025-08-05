@@ -1,0 +1,58 @@
+services:
+  # === HDFS ===
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: hdfs_namenode
+    networks:
+      - hdfs_net
+    environment:
+      - CLUSTER_NAME=test
+    ports:
+      - "9870:9870"
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: hdfs_datanode1
+    networks:
+      - hdfs_net
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hadoop_datanode1:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: hdfs_datanode2
+    networks:
+      - hdfs_net
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hadoop_datanode2:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: hdfs_datanode3
+    networks:
+      - hdfs_net
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hadoop_datanode3:/hadoop/dfs/data
+    depends_on:
+      - namenode
+
+volumes:
+  hadoop_namenode:      # Persistent storage for Hadoop NameNode metadata
+  hadoop_datanode1:     # Persistent storage for Hadoop DataNode 1 data
+  hadoop_datanode2:     # Persistent storage for Hadoop DataNode 2 data
+  hadoop_datanode3:     # Persistent storage for Hadoop DataNode 3 data
+
+networks:
+  hdfs_net:

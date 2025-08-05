@@ -1,0 +1,8 @@
+flask_app1 : http://localhost:5001/
+flask_app2 : http://localhost:5002/
+tracker-frontend : http://localhost:3000/
+
+kafka-ui : http://localhost:9500/
+spark : http://localhost:8090
+jupyter : http://localhost:8888/
+HDFS : http://localhost:9870

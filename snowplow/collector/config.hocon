@@ -1,0 +1,73 @@
+collector {
+  interface = "0.0.0.0"
+  port = 8080
+
+  paths {
+    "/health" = "health"
+  }
+
+  p3p {
+    policyRef = "/w3c/p3p.xml"
+    CP = "NOI DSP COR NID PSA OUR IND NAV STA"
+  }
+
+  crossDomain {
+    enabled = false
+    domains = [ "*" ]
+    secure = true
+  }
+
+  cookie {
+    enabled = true
+    expiration = 365 days
+    name = sp
+    domains = [ "localhost" ]
+    secure = false
+    httpOnly = true
+  }
+
+  doNotTrackCookie {
+    enabled = false
+    name = "dnt"
+    value = "1"
+  }
+
+  enableDefaultRedirect = true
+  redirectMacro {
+    enabled = false
+  }
+
+  rootResponse {
+    enabled = false
+    statusCode = 302
+    headers = {}
+  }
+}
+
+streams {
+
+  sink {
+    brokers = "kafka:9094"
+    topicName = "collector-good"
+    retries = 0
+    producerConf {
+      "acks" = "all"
+    }
+  }
+
+  buffer {
+    byteLimit = 100000
+    recordLimit = 500
+    timeLimit = 1000
+  }
+
+  good = "collector-good"
+  bad = "collector-bad"
+
+  useIpAddressAsUserId = true
+  enableDefaultRedirect = true
+}
+
+telemetry {
+  disable = true
+}

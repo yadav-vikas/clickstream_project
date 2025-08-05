@@ -1,0 +1,48 @@
+enrich {
+  streams {
+    in.raw = "collector-good"          
+    out.enriched = "enriched"          
+    out.bad = "enriched-bad"           
+
+    sourceSink {
+      enabled = "kafka"                
+      kafka {
+        brokers = "kafka:9094"
+
+        
+        consumerConf {
+          "group.id" = "snowplow-enrich-group"
+          "auto.offset.reset" = "earliest"
+        }
+
+      
+        producerConf {
+          "acks" = "all"
+        }
+      }
+    }
+
+    buffer {
+      byteLimit = 100000
+      recordLimit = 500
+      timeLimit = 10000
+    }
+  }
+
+  monitoring {
+    snowplow {
+      collectorUri = ""
+      appId = ""
+      method = "get"
+    }
+  }
+
+  telemetry {
+    disable = true
+  }
+
+  
+  iglu {
+    resolver = "/snowplow/iglu-client/iglu_resolver.json"
+  }
+}

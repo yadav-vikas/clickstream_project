@@ -1,0 +1,22 @@
+services:
+  # === JUPYTER NOTEBOOK ===
+  jupyter:
+    build: ./jupyter
+    container_name: jupyter
+    ports:
+      - "8888:8888"
+    networks:
+      - hdfs_net
+      - snowplow_net
+    environment:
+      - SPARK_HOME=/usr/local/spark
+      - HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+      - PYSPARK_PYTHON=python3
+      - PYSPARK_DRIVER_PYTHON=python
+      - PYSPARK_SUBMIT_ARGS=--master spark://spark-master:7077 pyspark-shell
+
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./spark/logs:/spark-logs  # Shared log directory from Spark container (optional)
+    depends_on:
+      - spark-master

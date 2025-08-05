@@ -1,0 +1,118 @@
+{
+  "input": {
+    "type": "kafka"
+    "appName": "snowplow-enrich-kafka"
+    "streamName": "collector-good"
+    "customEndpoint": "localhost:9094"
+    "initialPosition": {
+      "type": "LATEST"
+    }
+    "retrievalMode": {
+      "type": "Polling"
+      "maxRecords": 1
+    }
+    "bufferSize": 3
+    "checkpointBackoff": {
+      "minBackoff": 100 milliseconds
+      "maxBackoff": 10 seconds
+      "maxRetries": 10
+    }
+  }
+
+  "output": {
+    "good": {
+      "type": "kafka"
+      "streamName": "snowplow-enriched"
+      "customEndpoint": "localhost:9094"
+      "backoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 10 seconds
+        "maxRetries": 10
+      }
+      "throttledBackoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 1 second
+      }
+      "recordLimit": 5
+      "byteLimit": 5242880
+    }
+
+    "pii": {
+      "type": "kafka"
+      "streamName": "snowplow-raw"
+      "backoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 10 seconds
+        "maxRetries": 10
+      }
+      "throttledBackoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 1 second
+      }
+      "recordLimit": 500
+      "byteLimit": 5242880
+      "customEndpoint": "localhost:9094"
+    }
+
+    "bad": {
+      "type": "kafka"
+      "streamName": "snowplow-bad"
+      "customEndpoint": "localhost:9094"
+      "backoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 10 seconds
+        "maxRetries": 10
+      }
+      "throttledBackoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 1 second
+      }
+      "recordLimit": 500
+      "byteLimit": 5242880
+    }
+
+    "incomplete": {
+      "type": "kafka"
+      "streamName": "snowplow-bad"
+      "customEndpoint": "localhost:9094"
+      "backoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 10 seconds
+        "maxRetries": 10
+      }
+      "throttledBackoffPolicy": {
+        "minBackoff": 100 milliseconds
+        "maxBackoff": 1 second
+      }
+      "recordLimit": 500
+      "byteLimit": 5242880
+    }
+  }
+  "concurrency" : {
+    "enrich": 256
+    "sink": 1
+  }
+  "assetsUpdatePeriod": "7 days"
+  "remoteAdapters": {
+    "connectionTimeout": "10 seconds",
+    "readTimeout": "45 seconds",
+    "maxConnections": 10,
+    "configs": []
+  }
+
+  "telemetry": {
+    "disable": true
+  }
+
+  "featureFlags" : {
+    "acceptInvalid": false
+    "legacyEnrichmentOrder": false
+    "tryBase64Decoding": false
+  }
+  
+  "validation": {
+    "atomicFieldsLimits": {
+        "mkt_clickid": 100000
+    }
+  }
+}
